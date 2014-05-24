@@ -7,7 +7,7 @@ This is a Vagrant plugin for VMware ESXi.
 ## Usage
 
     gem build vagrant-esxi.gemspec
-    vagrant plugin install vagrant-esxi
+    vagrant plugin install ./vagrant-esxi-*.gem
 
 ## ESXi Host Setup
 
