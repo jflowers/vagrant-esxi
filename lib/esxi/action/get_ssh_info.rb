@@ -18,15 +18,22 @@ module VagrantPlugins
         private
 
         def get_ssh_info(connection, machine)
-
           config = machine.provider_config
 
-          o, s = Open3.capture2("ssh #{config.user}@#{config.host} vim-cmd vmsvc/get.guest '[#{config.datastore}]\\ #{config.name}/#{machine.config.vm.box}.vmx'")
-          m = /^   ipAddress = "(.*?)"/m.match(o)
-          return nil if m.nil?
+          ssh_util = VagrantPlugins::ESXi::Util::SSH
+          vm_path_name = ssh_util.get_vm_path(machine.id)
+          ip_addess = nil
+          ssh_util.esxi_host.communicate.execute("vim-cmd vmsvc/get.guest '#{vm_path_name}'") do |type, data|
+           if [:stderr, :stdout].include?(type)
+             ip_addess_match = data.match(/^\s+ipAddress\s+=\s+"(.*?)"/m)
+             ip_addess = ip_addess_match.captures[0].strip if ip_addess_match
+           end
+          end
+
+          return nil if ip_addess.nil?
 
           return {
-              :host => m[1],
+              :host => ip_addess,
               :port => 22
           }
         end

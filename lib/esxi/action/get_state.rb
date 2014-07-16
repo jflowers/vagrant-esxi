@@ -22,11 +22,15 @@ module VagrantPlugins
 
           config = machine.provider_config
 
-          o, s = Open3.capture2("ssh #{config.user}@#{config.host} vim-cmd vmsvc/power.getstate '[#{config.datastore}]\\ #{config.name}/#{machine.config.vm.box}.vmx'")
+          ssh_util = VagrantPlugins::ESXi::Util::SSH
+          
+          vm_path_name = ssh_util.get_vm_path(machine.id)
 
-          return :not_created if s.eql?(1)
+          return :not_created if vm_path_name.nil?
 
-          if o.chomp.eql?("Powered on")
+          running = ssh_util.esxi_host.communicate.execute("vim-cmd vmsvc/power.getstate '#{vm_path_name}' | grep -q 'Powered on'")
+
+          if running
             :running
           else
             :poweroff

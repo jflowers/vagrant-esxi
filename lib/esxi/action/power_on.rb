@@ -12,7 +12,9 @@ module VagrantPlugins
           config = env[:machine].provider_config
 
           env[:ui].info I18n.t("vagrant_esxi.powering_on")
-          system("ssh #{config.user}@#{config.host} vim-cmd vmsvc/power.on '[#{config.datastore}]\\ #{config.name}/#{env[:machine].config.vm.box}.vmx' > /dev/null")
+          ssh_util = VagrantPlugins::ESXi::Util::SSH
+          vm_path_name = ssh_util.get_vm_path(env[:machine].id)
+          ssh_util.esxi_host.communicate.execute("vim-cmd vmsvc/power.on '#{vm_path_name}'")
 
           # wait for SSH to be available 
           env[:ui].info(I18n.t("vagrant_esxi.waiting_for_ssh"))

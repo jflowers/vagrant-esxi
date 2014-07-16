@@ -10,7 +10,8 @@ module VagrantPlugins
 
           config = env[:machine].provider_config
 
-          env[:result] = system("ssh #{config.user}@#{config.host} vim-cmd vmsvc/getallvms | grep '\\[#{config.datastore}\\] #{config.name}/#{env[:machine].config.vm.box}.vmx' > /dev/null")
+          ssh_util = VagrantPlugins::ESXi::Util::SSH
+          env[:result] = ssh_util.esxi_host.communicate.execute("vim-cmd vmsvc/get.summary #{env[:machine].id}")
 
           @app.call env
         end

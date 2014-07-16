@@ -8,11 +8,7 @@ module VagrantPlugins
         end
 
         def call(env)
-
-          config = env[:machine].provider_config
-
-          env[:result] = system("ssh #{config.user}@#{config.host} vim-cmd vmsvc/power.getstate '[#{config.datastore}]\\ #{config.name}/#{env[:machine].config.vm.box}.vmx' | grep 'Powered on' > /dev/null")
-
+          raise "I don't think this is used, if this exception is raise we should consider using the get_state class instead..."
           @app.call env
         end
       end
