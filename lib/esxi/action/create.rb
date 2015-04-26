@@ -1,6 +1,7 @@
 require "i18n"
 require "open3"
 require "vagrant/util/subprocess"
+require 'esxi/util/ssh'
 
 module VagrantPlugins
   module ESXi
@@ -17,19 +18,21 @@ module VagrantPlugins
 
           box = env[:machine].box
           box = env[:global_config].box if box.nil?
-          vmx_file = Dir.glob(box.directory.join('*.vmx')).sort!.fetch(0)
 
           box_name = env[:machine].config.vm.box
           unique_machine_name = "#{env[:machine].name}-#{SecureRandom.uuid}"
 
-          unless system("ssh -i #{config.ssh_key_path} #{config.user}@#{config.host} test -e /vmfs/volumes/#{config.datastore}/#{box_name}")
+          ssh_util = VagrantPlugins::ESXi::Util::SSH
+          
+          if ssh_util.esxi_host.communicate.execute("test -e /vmfs/volumes/#{config.datastore}/#{box_name}", :error_check => false)
             env[:ui].info(I18n.t("vagrant_esxi.copying"))
+            vmx_file = Dir.glob(box.directory.join('*.vmx')).sort!.fetch(0)
 
             esxi_import_command = [
               "/Applications/VMware Fusion.app/Contents/Library/VMware OVF Tool/ovftool",
               "--diskMode=sparse",
               "--name=#{box_name}",
-              "--net:'External=VM Network'",
+              "--network=VM-Network",
               "--noSSLVerify",
               "--overwrite",
               "--privateKey=#{config.ssh_key_path}",
@@ -45,9 +48,7 @@ module VagrantPlugins
           end
 
           env[:ui].info(I18n.t("vagrant_esxi.creating"))
-          raise "#{unique_machine_name} exists!" if system("ssh -i #{config.ssh_key_path} #{config.user}@#{config.host} test -e /vmfs/volumes/#{config.datastore}/#{unique_machine_name}")
-
-          ssh_util = VagrantPlugins::ESXi::Util::SSH
+          raise "#{unique_machine_name} exists!" unless ssh_util.esxi_host.communicate.execute("test -e /vmfs/volumes/#{config.datastore}/#{unique_machine_name}", :error_check => false)
 
           script = <<-EOS
             mkdir -p /vmfs/volumes/#{config.datastore}/#{unique_machine_name}

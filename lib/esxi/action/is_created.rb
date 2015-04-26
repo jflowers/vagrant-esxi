@@ -1,3 +1,6 @@
+
+require 'esxi/util/ssh'
+
 module VagrantPlugins
   module ESXi
     module Action
@@ -7,11 +10,14 @@ module VagrantPlugins
         end
 
         def call(env)
+          if env[:machine].id.nil?
+            env[:result] = false
+          else
+            config = env[:machine].provider_config
 
-          config = env[:machine].provider_config
-
-          ssh_util = VagrantPlugins::ESXi::Util::SSH
-          env[:result] = ssh_util.esxi_host.communicate.execute("vim-cmd vmsvc/get.summary #{env[:machine].id}")
+            ssh_util = VagrantPlugins::ESXi::Util::SSH
+            env[:result] = ssh_util.esxi_host.communicate.execute("vim-cmd vmsvc/get.summary #{env[:machine].id}", :error_check => false)
+          end
 
           @app.call env
         end

@@ -1,4 +1,5 @@
 require "i18n"
+require 'esxi/util/ssh'
 
 module VagrantPlugins
   module ESXi

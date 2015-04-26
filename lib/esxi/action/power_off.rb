@@ -1,3 +1,5 @@
+require 'esxi/util/ssh'
+
 module VagrantPlugins
   module ESXi
     module Action

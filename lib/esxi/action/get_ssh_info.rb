@@ -1,4 +1,5 @@
 require "open3"
+require 'esxi/util/ssh'
 
 module VagrantPlugins
   module ESXi

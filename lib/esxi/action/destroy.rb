@@ -1,3 +1,6 @@
+
+require 'esxi/util/ssh'
+
 module VagrantPlugins
   module ESXi
     module Action
@@ -25,7 +28,6 @@ module VagrantPlugins
           
           env[:ui].info I18n.t("vagrant_esxi.unregistering")
           ssh_util.esxi_host.communicate.execute("vim-cmd vmsvc/unregister '#{vm_path_name}'")
-          system("ssh -i #{config.ssh_key_path} #{config.user}@#{config.host} vim-cmd vmsvc/unregister '[#{config.datastore}]\\ #{env[:machine].name}/#{env[:machine].config.vm.box}.vmx'")
 
           env[:ui].info I18n.t("vagrant_esxi.removing")
           ssh_util.esxi_host.communicate.execute("rm -rf /vmfs/volumes/#{config.datastore}/#{vm_name}")

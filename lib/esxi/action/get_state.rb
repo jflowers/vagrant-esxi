@@ -1,4 +1,5 @@
 require "open3"
+require 'esxi/util/ssh'
 
 module VagrantPlugins
   module ESXi
@@ -10,17 +11,15 @@ module VagrantPlugins
         end
 
         def call(env)
-          env[:machine_state_id] = get_state(env[:esxi_connection], env[:machine])
+          env[:machine_state_id] = get_state(env[:machine])
 
           @app.call env
         end
 
         private
 
-        def get_state(connection, machine)
+        def get_state(machine)
           return :not_created  if machine.id.nil?
-
-          config = machine.provider_config
 
           ssh_util = VagrantPlugins::ESXi::Util::SSH
           
@@ -28,7 +27,13 @@ module VagrantPlugins
 
           return :not_created if vm_path_name.nil?
 
-          running = ssh_util.esxi_host.communicate.execute("vim-cmd vmsvc/power.getstate '#{vm_path_name}' | grep -q 'Powered on'")
+          running = false
+          ssh_util.esxi_host.communicate.execute("vim-cmd vmsvc/power.getstate '#{vm_path_name}'") do |type, data|
+           if [:stderr, :stdout].include?(type)
+             ip_addess_match = data.match(/Powered on/)
+             ip_addess = true if ip_addess_match
+           end
+          end
 
           if running
             :running
